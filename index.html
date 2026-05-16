@@ -530,7 +530,7 @@ function renderHistory(){
   const hist=getHistory();
   const el=document.getElementById('hist-body');
   if(!hist.length){
-    el.innerHTML='<div class="no-hist">Abhi koi history nahi — 10:05 AM pe automatically save hoga</div>';
+    el.innerHTML='';
     return;
   }
   el.innerHTML=`<table>
