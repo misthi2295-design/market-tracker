@@ -183,37 +183,17 @@ h2{
 
 </div>
 
-<!-- TOP GAINER -->
+<!-- TOP GAINERS -->
 
-<h2>🚀 Top Gainer Index</h2>
+<h2>🚀 Top 3 Gainer Indices</h2>
 
-<div class="grid">
+<div class="grid" id="topGainersGrid"></div>
 
-  <div class="card" id="topGainerCard">
+<!-- TOP LOSERS -->
 
-    <div class="symbol">
-      Loading...
-    </div>
+<h2>📉 Top 3 Loser Indices</h2>
 
-  </div>
-
-</div>
-
-<!-- TOP LOSER -->
-
-<h2>📉 Top Loser Index</h2>
-
-<div class="grid">
-
-  <div class="card" id="topLoserCard">
-
-    <div class="symbol">
-      Loading...
-    </div>
-
-  </div>
-
-</div>
+<div class="grid" id="topLosersGrid"></div>
 
 <!-- AI MOOD -->
 
@@ -336,6 +316,36 @@ async function fetchYahoo(symbol){
 
 }
 
+function createCard(item,color){
+
+  return `
+
+    <div class="card">
+
+      <div class="symbol">
+        ${item.name}
+      </div>
+
+      <div class="price">
+        ${item.price}
+      </div>
+
+      <div class="change ${color}">
+
+        ${color === "green" ? "▲" : "▼"}
+
+        ${item.change}
+
+        (${item.percent}%)
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
 async function loadMainMarket(){
 
   const grid =
@@ -402,57 +412,44 @@ async function loadMainMarket(){
 
 function loadTopMovers(){
 
+  const gainersGrid =
+  document.getElementById("topGainersGrid");
+
+  const losersGrid =
+  document.getElementById("topLosersGrid");
+
   const sorted =
   [...marketData]
   .sort((a,b)=>b.change-a.change);
 
-  const topGainer =
-  sorted[0];
+  const topGainers =
+  sorted.slice(0,3);
 
-  const topLoser =
-  sorted[sorted.length - 1];
+  const topLosers =
+  sorted.slice(-3).reverse();
 
-  document.getElementById("topGainerCard")
-  .innerHTML = `
+  let gainersHTML = "";
+  let losersHTML = "";
 
-    <div class="symbol">
-      ${topGainer.name}
-    </div>
+  topGainers.forEach(item=>{
 
-    <div class="price">
-      ${topGainer.price}
-    </div>
+    gainersHTML +=
+    createCard(item,"green");
 
-    <div class="change green">
+  });
 
-      ▲ ${topGainer.change}
+  topLosers.forEach(item=>{
 
-      (${topGainer.percent}%)
+    losersHTML +=
+    createCard(item,"red");
 
-    </div>
+  });
 
-  `;
+  gainersGrid.innerHTML =
+  gainersHTML;
 
-  document.getElementById("topLoserCard")
-  .innerHTML = `
-
-    <div class="symbol">
-      ${topLoser.name}
-    </div>
-
-    <div class="price">
-      ${topLoser.price}
-    </div>
-
-    <div class="change red">
-
-      ▼ ${topLoser.change}
-
-      (${topLoser.percent}%)
-
-    </div>
-
-  `;
+  losersGrid.innerHTML =
+  losersHTML;
 
 }
 
