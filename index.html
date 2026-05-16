@@ -1,555 +1,594 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>DR Brokers Market Tracker</title>
-
 <style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#050816;color:white;padding:20px}
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
-  font-family:Arial,sans-serif;
+.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px;margin-bottom:30px}
+.brand{font-size:42px;font-weight:bold;color:#6c63ff}
+.tagline{color:#aaa;margin-top:5px}
+.refresh-btn{background:#6c63ff;color:white;border:none;padding:12px 20px;border-radius:12px;cursor:pointer;font-size:16px;font-weight:bold}
+.refresh-btn:hover{background:#5a52e0}
+.market-status{background:#11182d;padding:10px 18px;border-radius:12px;font-size:15px}
+
+h2{margin-top:40px;margin-bottom:20px}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px}
+.card{background:#11182d;padding:22px;border-radius:18px;transition:0.3s;box-shadow:0 0 10px rgba(0,0,0,0.4)}
+.card:hover{transform:translateY(-5px)}
+.symbol{color:#a0a0a0;margin-bottom:14px;font-size:15px}
+.price{font-size:30px;font-weight:bold;margin-bottom:10px}
+.change{font-size:18px;font-weight:bold}
+.green{color:#00ff9d}
+.red{color:#ff4d6d}
+.yellow{color:#f59e0b}
+
+/* OPTION TRACKER SPECIAL */
+.opt-section{margin-top:40px}
+.opt-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:16px}
+.opt-header h2{margin:0}
+.window-badge{font-size:13px;padding:6px 14px;border-radius:20px;font-weight:700;border:1px solid}
+.window-active{background:#14532d;color:#4ade80;border-color:#166534}
+.window-waiting{background:#1a1508;color:#f59e0b;border-color:#92400e}
+.window-done{background:#1e1b2e;color:#a78bfa;border-color:#4c1d95}
+.window-closed{background:#1a1a1a;color:#555;border-color:#333}
+
+.nifty-price-row{background:#11182d;border-radius:14px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.nifty-label{font-size:13px;color:#888;font-weight:700;letter-spacing:.5px}
+.nifty-val{font-size:28px;font-weight:800;color:#6c63ff}
+.nifty-sub{font-size:13px;color:#666}
+
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.opt-card{background:#11182d;border-radius:18px;padding:22px;box-shadow:0 0 10px rgba(0,0,0,0.4);border:1px solid #1e1e2e;transition:.3s}
+.opt-card:hover{transform:translateY(-4px)}
+.opt-card.ce-card{border-top:3px solid #00ff9d}
+.opt-card.pe-card{border-top:3px solid #ff4d6d}
+.opt-strike{font-size:18px;font-weight:800;margin-bottom:4px}
+.opt-strike.ce{color:#00ff9d}
+.opt-strike.pe{color:#ff4d6d}
+.opt-type{font-size:12px;color:#666;margin-bottom:18px;font-weight:700;letter-spacing:.5px}
+
+.opt-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e1e2e}
+.opt-row:last-child{border-bottom:none}
+.opt-row-label{font-size:13px;color:#888;font-weight:600}
+.opt-row-val{font-size:20px;font-weight:800}
+.sl-val{color:#ff4d6d}
+.sell-val{color:#00ff9d}
+
+.logic-note{font-size:12px;color:#555;margin-top:8px;font-style:italic}
+
+/* HISTORY */
+.hist-section{margin-top:40px}
+.hist-table-wrap{background:#11182d;border-radius:14px;overflow:hidden;border:1px solid #1e1e2e}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:#666;padding:10px 14px;text-align:left;border-bottom:1px solid #1e1e2e;background:#0d0d1a;font-weight:700;letter-spacing:.4px}
+td{font-size:13px;padding:10px 14px;border-bottom:1px solid #0d0d1a;color:#ccc}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#13132a}
+.today-row td{background:#0d0d22}
+.td-date{color:#888;font-size:12px}
+.td-strike-ce{color:#00ff9d;font-weight:700}
+.td-strike-pe{color:#ff4d6d;font-weight:700}
+.td-sl{color:#ff4d6d;font-weight:700}
+.td-sell{color:#00ff9d;font-weight:700}
+.td-price{color:#6c63ff;font-weight:700}
+
+.no-hist{text-align:center;padding:28px;color:#444;font-size:13px}
+
+.clear-btn{font-size:12px;padding:5px 12px;border:1px solid #1e1e2e;border-radius:8px;background:transparent;color:#666;cursor:pointer}
+.clear-btn:hover{background:#1e1e2e;color:#ccc}
+.hist-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid #1e1e2e}
+.hist-head h3{font-size:15px;font-weight:700}
+
+.tracking-log{background:#0d0d1a;border-radius:10px;padding:12px 14px;margin-top:12px;max-height:120px;overflow-y:auto}
+.log-item{font-size:11px;color:#555;padding:2px 0;border-bottom:1px solid #0f0f1f}
+.log-item:last-child{border-bottom:none}
+.log-item.new{color:#6c63ff}
+
+.footer{text-align:center;margin-top:40px;color:#888;font-size:14px}
+
+.loading-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#6c63ff;animation:ldot .8s infinite}
+@keyframes ldot{0%,100%{opacity:.2}50%{opacity:1}}
+
+@media(max-width:600px){
+  .brand{font-size:28px}
+  .opt-grid{grid-template-columns:1fr}
+  .nifty-val{font-size:22px}
 }
-
-body{
-  background:#050816;
-  color:white;
-  padding:20px;
-}
-
-.topbar{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:20px;
-  margin-bottom:30px;
-}
-
-.brand{
-  font-size:42px;
-  font-weight:bold;
-  color:#6c63ff;
-}
-
-.tagline{
-  color:#aaa;
-  margin-top:5px;
-}
-
-.refresh-btn{
-  background:#6c63ff;
-  color:white;
-  border:none;
-  padding:12px 20px;
-  border-radius:12px;
-  cursor:pointer;
-  font-size:16px;
-  font-weight:bold;
-}
-
-.market-status{
-  background:#11182d;
-  padding:10px 18px;
-  border-radius:12px;
-  font-size:15px;
-}
-
-h2{
-  margin-top:40px;
-  margin-bottom:20px;
-}
-
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:20px;
-}
-
-.card{
-  background:#11182d;
-  padding:22px;
-  border-radius:18px;
-  transition:0.3s;
-  box-shadow:0 0 10px rgba(0,0,0,0.4);
-}
-
-.card:hover{
-  transform:translateY(-5px);
-}
-
-.symbol{
-  color:#a0a0a0;
-  margin-bottom:14px;
-  font-size:15px;
-}
-
-.price{
-  font-size:30px;
-  font-weight:bold;
-  margin-bottom:10px;
-}
-
-.change{
-  font-size:18px;
-  font-weight:bold;
-}
-
-.green{
-  color:#00ff9d;
-}
-
-.red{
-  color:#ff4d6d;
-}
-
-.footer{
-  text-align:center;
-  margin-top:40px;
-  color:#888;
-  font-size:14px;
-}
-
 </style>
-
 </head>
-
 <body>
 
 <div class="topbar">
-
   <div>
-
-    <div class="brand">
-      DR Brokers
-    </div>
-
-    <div class="tagline">
-      Professional Live Market Dashboard
-    </div>
-
+    <div class="brand">DR Brokers</div>
+    <div class="tagline">Professional Live Market Dashboard</div>
   </div>
-
-  <div class="market-status" id="marketStatus">
-    🟢 Market Active
-  </div>
-
-  <button class="refresh-btn" onclick="startLoad()">
-    Refresh
-  </button>
-
+  <div class="market-status" id="marketStatus">🟢 Market Active</div>
+  <button class="refresh-btn" onclick="startLoad()">⟳ Refresh</button>
 </div>
 
 <!-- WORLD MARKET -->
-
 <h2>🌍 World Market Indices</h2>
-
-<div class="grid" id="marketGrid"></div>
+<div class="grid" id="marketGrid"><div style="color:#555;padding:20px"><span class="loading-dot"></span> Loading...</div></div>
 
 <!-- TOP GAINERS -->
-
 <h2>🚀 Top 3 Gainer Indices</h2>
-
 <div class="grid" id="topGainersGrid"></div>
 
 <!-- TOP LOSERS -->
-
 <h2>📉 Top 3 Loser Indices</h2>
-
 <div class="grid" id="topLosersGrid"></div>
 
-<!-- OPTION TRACKER -->
+<!-- ══ OPTION TRACKER ══ -->
+<div class="opt-section">
+  <div class="opt-header">
+    <h2>📊 Nifty Option Range Tracker</h2>
+    <span class="window-badge" id="window-badge">Checking...</span>
+  </div>
 
-<h2>📊 Nifty Option Range Tracker</h2>
+  <!-- Nifty spot at 10:05 -->
+  <div class="nifty-price-row">
+    <div>
+      <div class="nifty-label">NIFTY SPOT @ 10:05 AM</div>
+      <div class="nifty-val" id="nifty-spot-display">—</div>
+    </div>
+    <div>
+      <div class="nifty-label">ATM CALL STRIKE</div>
+      <div style="font-size:20px;font-weight:800;color:#00ff9d" id="call-strike-display">—</div>
+    </div>
+    <div>
+      <div class="nifty-label">ATM PUT STRIKE</div>
+      <div style="font-size:20px;font-weight:800;color:#ff4d6d" id="put-strike-display">—</div>
+    </div>
 
-<div class="grid" id="optionTrackerGrid"></div>
+  </div>
 
-<div class="footer">
-  Powered By DR Brokers • Auto Refresh Every 60 Seconds
+  <!-- CE / PE Cards -->
+  <div class="opt-grid" id="opt-grid">
+    <div class="opt-card ce-card">
+      <div class="opt-strike ce" id="ce-strike-label">— CE</div>
+      <div class="opt-type">CALL OPTION</div>
+      <div class="opt-row">
+        <div class="opt-row-label">🔴 SL</div>
+        <div class="opt-row-val sl-val" id="ce-sl">—</div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-row-label">🟢 SELL</div>
+        <div class="opt-row-val sell-val" id="ce-sell">—</div>
+      </div>
+    </div>
+    <div class="opt-card pe-card">
+      <div class="opt-strike pe" id="pe-strike-label">— PE</div>
+      <div class="opt-type">PUT OPTION</div>
+      <div class="opt-row">
+        <div class="opt-row-label">🔴 SL</div>
+        <div class="opt-row-val sl-val" id="pe-sl">—</div>
+      </div>
+      <div class="opt-row">
+        <div class="opt-row-label">🟢 SELL</div>
+        <div class="opt-row-val sell-val" id="pe-sell">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live tick log -->
+  <div class="tracking-log" id="tick-log">
+    <div style="color:#444;font-size:12px">Tracking ticks yahan dikhenge...</div>
+  </div>
 </div>
 
+<!-- HISTORY -->
+<div class="hist-section">
+  <div class="hist-table-wrap">
+    <div class="hist-head">
+      <h3>📋 Daily Snapshot History</h3>
+      <button class="clear-btn" onclick="clearHistory()">Clear</button>
+    </div>
+    <div id="hist-body">
+      <div class="no-hist">Abhi koi history nahi — 10:05 AM pe automatically save hoga</div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">Powered By DR Brokers • Auto Refresh Every 30 Seconds</div>
+
 <script>
-
-const symbols = [
-
-  {
-    name:"S&P 500",
-    symbol:"^GSPC"
-  },
-
-  {
-    name:"NASDAQ",
-    symbol:"^IXIC"
-  },
-
-  {
-    name:"Dow Jones",
-    symbol:"^DJI"
-  },
-
-  {
-    name:"NIFTY 50",
-    symbol:"^NSEI"
-  },
-
-  {
-    name:"BANK NIFTY",
-    symbol:"^NSEBANK"
-  },
-
-  {
-    name:"BTC/USD",
-    symbol:"BTC-USD"
-  },
-
-  {
-    name:"ETH/USD",
-    symbol:"ETH-USD"
-  }
-
+// ════════════════════════════════════════════
+// WORLD MARKET DATA
+// ════════════════════════════════════════════
+const symbols=[
+  {name:'S&P 500',  symbol:'^GSPC'},
+  {name:'NASDAQ',   symbol:'^IXIC'},
+  {name:'Dow Jones',symbol:'^DJI'},
+  {name:'NIFTY 50', symbol:'^NSEI'},
+  {name:'BANK NIFTY',symbol:'^NSEBANK'},
+  {name:'BTC/USD',  symbol:'BTC-USD'},
+  {name:'ETH/USD',  symbol:'ETH-USD'}
 ];
-
-let marketData = [];
+let marketData=[];
 
 async function fetchYahoo(symbol){
-
   try{
-
-    const proxy =
-    "https://api.allorigins.win/get?url=";
-
-    const target =
-    encodeURIComponent(
-      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`
-    );
-
-    const response =
-    await fetch(proxy + target);
-
-    const wrappedData =
-    await response.json();
-
-    const data =
-    JSON.parse(wrappedData.contents);
-
-    if(
-      !data.chart ||
-      !data.chart.result ||
-      !data.chart.result[0]
-    ){
-      return null;
-    }
-
-    const result =
-    data.chart.result[0];
-
-    const meta =
-    result.meta;
-
-    const price =
-    meta.regularMarketPrice;
-
-    const prevClose =
-    meta.previousClose;
-
-    const change =
-    (price - prevClose).toFixed(2);
-
-    const percent =
-    (((price - prevClose) / prevClose) * 100)
-    .toFixed(2);
-
-    return {
-
-      price: price.toFixed(2),
-      change,
-      percent
-
-    };
-
-  }
-
-  catch(error){
-
-    console.log(error);
-
-    return null;
-
-  }
-
+    const proxy='https://api.allorigins.win/get?url=';
+    const target=encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`);
+    const r=await fetch(proxy+target);
+    const w=await r.json();
+    const data=JSON.parse(w.contents);
+    if(!data.chart||!data.chart.result||!data.chart.result[0]) return null;
+    const meta=data.chart.result[0].meta;
+    const price=meta.regularMarketPrice;
+    const prev=meta.previousClose;
+    const change=(price-prev).toFixed(2);
+    const percent=(((price-prev)/prev)*100).toFixed(2);
+    return{price:price.toFixed(2),change,percent};
+  }catch(e){return null}
 }
 
 function createCard(item,color){
-
-  return `
-
-    <div class="card">
-
-      <div class="symbol">
-        ${item.name}
-      </div>
-
-      <div class="price">
-        ${item.price}
-      </div>
-
-      <div class="change ${color}">
-
-        ${color === "green" ? "▲" : "▼"}
-
-        ${item.change}
-
-        (${item.percent}%)
-
-      </div>
-
-    </div>
-
-  `;
-
+  return`<div class="card">
+    <div class="symbol">${item.name}</div>
+    <div class="price">${item.price}</div>
+    <div class="change ${color}">${color==='green'?'▲':'▼'} ${item.change} (${item.percent}%)</div>
+  </div>`;
 }
 
 async function loadMainMarket(){
-
-  const grid =
-  document.getElementById("marketGrid");
-
-  let html = "";
-
-  marketData = [];
-
+  const grid=document.getElementById('marketGrid');
+  grid.innerHTML='<div style="color:#555;padding:20px"><span class="loading-dot"></span> Fetching live data...</div>';
+  let html=''; marketData=[];
   for(const item of symbols){
-
-    const data =
-    await fetchYahoo(item.symbol);
-
+    const data=await fetchYahoo(item.symbol);
     if(data){
-
-      const positive =
-      Number(data.change) >= 0;
-
-      marketData.push({
-
-        name:item.name,
-        price:data.price,
-        change:Number(data.change),
-        percent:data.percent
-
-      });
-
-      html += `
-
-      <div class="card">
-
-        <div class="symbol">
-          ${item.name}
-        </div>
-
-        <div class="price">
-          ${data.price}
-        </div>
-
-        <div class="change ${positive ? "green" : "red"}">
-
-          ${positive ? "▲" : "▼"}
-
-          ${data.change}
-
-          (${data.percent}%)
-
-        </div>
-
-      </div>
-
-      `;
-
+      const pos=Number(data.change)>=0;
+      marketData.push({name:item.name,price:data.price,change:Number(data.change),percent:data.percent});
+      html+=`<div class="card">
+        <div class="symbol">${item.name}</div>
+        <div class="price">${data.price}</div>
+        <div class="change ${pos?'green':'red'}">${pos?'▲':'▼'} ${data.change} (${data.percent}%)</div>
+      </div>`;
     }
-
   }
-
-  grid.innerHTML = html;
-
+  grid.innerHTML=html||'<div style="color:#555;padding:20px">Data nahi mila</div>';
   loadTopMovers();
-
 }
 
 function loadTopMovers(){
+  if(!marketData.length) return;
+  const sorted=[...marketData].sort((a,b)=>b.change-a.change);
+  document.getElementById('topGainersGrid').innerHTML=sorted.slice(0,3).map(i=>createCard(i,'green')).join('');
+  document.getElementById('topLosersGrid').innerHTML=sorted.slice(-3).reverse().map(i=>createCard(i,'red')).join('');
+}
 
-  if(marketData.length === 0){
+// ════════════════════════════════════════════
+// OPTION TRACKER — CORE LOGIC
+// ════════════════════════════════════════════
+// Storage keys
+const TODAY = () => new Date().toLocaleDateString('en-IN',{timeZone:'Asia/Kolkata'});
+const TICKS_KEY = () => `dr_ticks_${TODAY()}`;
+const HIST_KEY  = 'dr_opt_history';
+const SNAP_KEY  = () => `dr_snapped_${TODAY()}`;
+
+// Get IST time
+function getIST(){ return new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Kolkata'})); }
+
+// Market window checks
+function getWindowState(){
+  const t=getIST(), h=t.getHours(), m=t.getMinutes();
+  const mins=h*60+m;
+  if(mins<555)  return 'pre';       // before 9:15
+  if(mins<560)  return 'ignore';    // 9:15–9:20 ignore
+  if(mins<=605) return 'active';    // 9:20–10:05 TRACK
+  if(mins<=930) return 'done';      // after 10:05, market still open
+  return 'closed';
+}
+
+// Get Nifty live price
+async function fetchNiftySpot(){
+  try{
+    const proxy='https://api.allorigins.win/get?url=';
+    const target=encodeURIComponent('https://query1.finance.yahoo.com/v8/finance/chart/%5ENSEI');
+    const r=await fetch(proxy+target);
+    const w=await r.json();
+    const data=JSON.parse(w.contents);
+    return data.chart.result[0].meta.regularMarketPrice;
+  }catch(e){ return null; }
+}
+
+// Nearest strikes
+function getCallStrike(price){ return Math.ceil(price/50)*50; }
+function getPutStrike(price){  return Math.floor(price/50)*50; }
+
+// Tick storage
+function getTicks(){ return JSON.parse(localStorage.getItem(TICKS_KEY())||'[]'); }
+function addTick(tick){
+  const ticks=getTicks();
+  ticks.push(tick);
+  localStorage.setItem(TICKS_KEY(),JSON.stringify(ticks));
+}
+
+// Compute High/Low from ticks for a specific strike+type
+function getHL(ticks, strike, type){
+  const filtered=ticks.filter(t=>t.strike===strike&&t.type===type);
+  if(!filtered.length) return{high:null,low:null};
+  const prices=filtered.map(t=>t.price);
+  return{high:Math.max(...prices), low:Math.min(...prices)};
+}
+
+// History
+function getHistory(){ return JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); }
+function saveHistory(h){ localStorage.setItem(HIST_KEY,JSON.stringify(h.slice(0,30))); }
+function clearHistory(){
+  if(confirm('History clear karein?')){
+    localStorage.removeItem(HIST_KEY);
+    renderHistory();
+  }
+}
+
+// ════════════════════════════════════════════
+// FETCH OPTION PRICE via Yahoo (approximate)
+// We use ^NSEI for nifty spot + compute CE/PE using
+// Yahoo Finance options endpoint via allorigins
+// ════════════════════════════════════════════
+async function fetchOptionPrice(strike, type){
+  // Yahoo Finance option chain for nifty
+  // Symbol format: ^NSEI  — options: NIFTY<YYMMDD>C<strike> on NSE
+  // Since Yahoo doesn't reliably serve NSE options via free API,
+  // we use NSE's own JSON (via allorigins proxy)
+  try{
+    const proxy='https://api.allorigins.win/get?url=';
+    const nseUrl=`https://www.nseindia.com/api/option-chain-indices?symbol=NIFTY`;
+    const r=await fetch(proxy+encodeURIComponent(nseUrl),{
+      headers:{'User-Agent':'Mozilla/5.0'}
+    });
+    const w=await r.json();
+    const data=JSON.parse(w.contents);
+    if(!data||!data.records||!data.records.data) return null;
+
+    // Find matching strike
+    const expiry=data.records.expiryDates[0]; // nearest expiry
+    const row=data.records.data.find(d=>d.strikePrice===strike&&d.expiryDate===expiry);
+    if(!row) return null;
+
+    if(type==='CE'&&row.CE) return row.CE.lastPrice;
+    if(type==='PE'&&row.PE) return row.PE.lastPrice;
+    return null;
+  }catch(e){
+    console.log('Option fetch error:',e);
+    return null;
+  }
+}
+
+// Tick log display
+function addTickLog(msg, highlight=false){
+  const log=document.getElementById('tick-log');
+  const div=document.createElement('div');
+  div.className='log-item'+(highlight?' new':'');
+  div.textContent=msg;
+  log.insertBefore(div,log.firstChild);
+  // Keep max 20 logs
+  while(log.children.length>20) log.removeChild(log.lastChild);
+}
+
+// ════════════════════════════════════════════
+// MAIN OPTION TRACKER UPDATE
+// ════════════════════════════════════════════
+let lastTickTime='';
+let snapshotDone=false;
+
+async function updateOptionTracker(){
+  const state=getWindowState();
+  const badge=document.getElementById('window-badge');
+  const t=getIST();
+  const timeStr=t.toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false,timeZone:'Asia/Kolkata'});
+
+  // Update badge
+  if(state==='active'){
+    badge.textContent='🟢 Tracking Active (9:20–10:05)';
+    badge.className='window-badge window-active';
+  } else if(state==='ignore'){
+    badge.textContent='⏸ Ignore Window (9:15–9:20)';
+    badge.className='window-badge window-waiting';
+  } else if(state==='done'){
+    badge.textContent='✅ Window Done (Snapshot Saved)';
+    badge.className='window-badge window-done';
+  } else if(state==='pre'){
+    badge.textContent='⏳ Market Opens 9:15 AM';
+    badge.className='window-badge window-waiting';
+  } else {
+    badge.textContent='🔴 Market Closed';
+    badge.className='window-badge window-closed';
+  }
+
+  // Fetch Nifty spot
+  const niftySpot=await fetchNiftySpot();
+
+  if(state==='done'||state==='active'){
+    // Use last known ticks to show snapshot display
+    const ticks=getTicks();
+
+    // Determine which strike to show
+    // At 10:05, use nifty price to find ATM strikes
+    // For "done" state we use saved snapshot or current price
+    const spotToUse = niftySpot || (ticks.length>0 ? ticks[ticks.length-1].niftySpot : 0);
+
+    if(spotToUse>0){
+      const cs=getCallStrike(spotToUse);
+      const ps=getPutStrike(spotToUse);
+
+      document.getElementById('nifty-spot-display').textContent=spotToUse.toFixed(2);
+      document.getElementById('call-strike-display').textContent=cs;
+      document.getElementById('put-strike-display').textContent=ps;
+      document.getElementById('ce-strike-label').textContent=cs+' CE';
+      document.getElementById('pe-strike-label').textContent=ps+' PE';
+
+      const ceHL=getHL(ticks,cs,'CE');
+      const peHL=getHL(ticks,ps,'PE');
+
+      document.getElementById('ce-sl').textContent  = ceHL.high!=null ? ceHL.high.toFixed(2) : '—';
+      document.getElementById('ce-sell').textContent = ceHL.low!=null  ? ceHL.low.toFixed(2)  : '—';
+      document.getElementById('pe-sl').textContent  = peHL.high!=null ? peHL.high.toFixed(2) : '—';
+      document.getElementById('pe-sell').textContent = peHL.low!=null  ? peHL.low.toFixed(2)  : '—';
+
+      // Auto snapshot at 10:05
+      const h=t.getHours(), m=t.getMinutes();
+      const alreadySnapped=localStorage.getItem(SNAP_KEY());
+      if(h===10&&m===5&&!alreadySnapped&&ceHL.high!=null){
+        const hist=getHistory();
+        hist.unshift({
+          date:TODAY(),
+          time:'10:05 AM',
+          niftySpot:spotToUse.toFixed(2),
+          callStrike:cs,
+          putStrike:ps,
+          ceSL:ceHL.high.toFixed(2),
+          ceSell:ceHL.low.toFixed(2),
+          peSL:peHL.high.toFixed(2),
+          peSell:peHL.low.toFixed(2)
+        });
+        saveHistory(hist);
+        localStorage.setItem(SNAP_KEY(),'1');
+        renderHistory();
+        addTickLog(`✅ 10:05 SNAPSHOT SAVED! Nifty: ${spotToUse.toFixed(2)} | CE ${cs}: SL=${ceHL.high.toFixed(2)}, SELL=${ceHL.low.toFixed(2)} | PE ${ps}: SL=${peHL.high.toFixed(2)}, SELL=${peHL.low.toFixed(2)}`, true);
+      }
+    }
+  }
+
+  // ACTIVE WINDOW: fetch & record option prices every tick
+  if(state==='active'&&niftySpot){
+    const cs=getCallStrike(niftySpot);
+    const ps=getPutStrike(niftySpot);
+    const tickMin=t.getHours()*60+t.getMinutes();
+    const tickKey=`${tickMin}`;
+
+    // Only record once per minute
+    if(tickKey!==lastTickTime){
+      lastTickTime=tickKey;
+      addTickLog(`⏳ ${timeStr} — Fetching CE ${cs} & PE ${ps} prices...`);
+
+      const [cePrice, pePrice]=await Promise.all([
+        fetchOptionPrice(cs,'CE'),
+        fetchOptionPrice(ps,'PE')
+      ]);
+
+      if(cePrice!==null){
+        addTick({time:timeStr,strike:cs,type:'CE',price:cePrice,niftySpot});
+        addTickLog(`📈 ${timeStr} | CE ${cs} = ₹${cePrice}`,true);
+      }
+      if(pePrice!==null){
+        addTick({time:timeStr,strike:ps,type:'PE',price:pePrice,niftySpot});
+        addTickLog(`📉 ${timeStr} | PE ${ps} = ₹${pePrice}`,true);
+      }
+
+      // Update display immediately after tick
+      const ticks=getTicks();
+      const ceHL=getHL(ticks,cs,'CE');
+      const peHL=getHL(ticks,ps,'PE');
+
+      document.getElementById('nifty-spot-display').textContent=niftySpot.toFixed(2);
+      document.getElementById('call-strike-display').textContent=cs;
+      document.getElementById('put-strike-display').textContent=ps;
+      document.getElementById('ce-strike-label').textContent=cs+' CE';
+      document.getElementById('pe-strike-label').textContent=ps+' PE';
+      document.getElementById('ce-sl').textContent  = ceHL.high!=null ? ceHL.high.toFixed(2) : '—';
+      document.getElementById('ce-sell').textContent = ceHL.low!=null  ? ceHL.low.toFixed(2)  : '—';
+      document.getElementById('pe-sl').textContent  = peHL.high!=null ? peHL.high.toFixed(2) : '—';
+      document.getElementById('pe-sell').textContent = peHL.low!=null  ? peHL.low.toFixed(2)  : '—';
+    }
+  }
+
+  // Show today's data even after window if ticks exist
+  if(state==='closed'||state==='pre'){
+    const ticks=getTicks();
+    if(ticks.length>0){
+      const last=ticks[ticks.length-1];
+      const cs=getCallStrike(last.niftySpot);
+      const ps=getPutStrike(last.niftySpot);
+      const ceHL=getHL(ticks,cs,'CE');
+      const peHL=getHL(ticks,ps,'PE');
+      document.getElementById('nifty-spot-display').textContent=last.niftySpot.toFixed(2)+' (last)';
+      document.getElementById('call-strike-display').textContent=cs;
+      document.getElementById('put-strike-display').textContent=ps;
+      document.getElementById('ce-strike-label').textContent=cs+' CE';
+      document.getElementById('pe-strike-label').textContent=ps+' PE';
+      document.getElementById('ce-sl').textContent  = ceHL.high!=null ? ceHL.high.toFixed(2) : '—';
+      document.getElementById('ce-sell').textContent = ceHL.low!=null  ? ceHL.low.toFixed(2)  : '—';
+      document.getElementById('pe-sl').textContent  = peHL.high!=null ? peHL.high.toFixed(2) : '—';
+      document.getElementById('pe-sell').textContent = peHL.low!=null  ? peHL.low.toFixed(2)  : '—';
+    }
+  }
+}
+
+// ════════════════════════════════════════════
+// HISTORY RENDER
+// ════════════════════════════════════════════
+function renderHistory(){
+  const hist=getHistory();
+  const el=document.getElementById('hist-body');
+  if(!hist.length){
+    el.innerHTML='<div class="no-hist">Abhi koi history nahi — 10:05 AM pe automatically save hoga</div>';
     return;
   }
-
-  const gainersGrid =
-  document.getElementById("topGainersGrid");
-
-  const losersGrid =
-  document.getElementById("topLosersGrid");
-
-  const sorted =
-  [...marketData]
-  .sort((a,b)=>b.change-a.change);
-
-  const topGainers =
-  sorted.slice(0,3);
-
-  const topLosers =
-  sorted.slice(-3).reverse();
-
-  let gainersHTML = "";
-  let losersHTML = "";
-
-  topGainers.forEach(item=>{
-
-    gainersHTML +=
-    createCard(item,"green");
-
-  });
-
-  topLosers.forEach(item=>{
-
-    losersHTML +=
-    createCard(item,"red");
-
-  });
-
-  gainersGrid.innerHTML =
-  gainersHTML;
-
-  losersGrid.innerHTML =
-  losersHTML;
-
+  el.innerHTML=`<table>
+    <thead><tr>
+      <th>DATE</th>
+      <th>NIFTY @ 10:05</th>
+      <th>CALL STRIKE</th>
+      <th>CE SL</th>
+      <th>CE SELL</th>
+      <th>PUT STRIKE</th>
+      <th>PE SL</th>
+      <th>PE SELL</th>
+    </tr></thead>
+    <tbody>${hist.map((h,i)=>`
+    <tr class="${i===0?'today-row':''}">
+      <td class="td-date">${h.date} ${h.time}</td>
+      <td class="td-price">${h.niftySpot}</td>
+      <td class="td-strike-ce">${h.callStrike} CE</td>
+      <td class="td-sl">${h.ceSL}</td>
+      <td class="td-sell">${h.ceSell}</td>
+      <td class="td-strike-pe">${h.putStrike} PE</td>
+      <td class="td-sl">${h.peSL}</td>
+      <td class="td-sell">${h.peSell}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>`;
 }
 
-async function getOptionData(){
-
-  const grid =
-  document.getElementById("optionTrackerGrid");
-
-  const niftySpot = 24005;
-
-  const putStrike =
-  Math.floor(niftySpot / 50) * 50;
-
-  const callStrike =
-  Math.ceil(niftySpot / 50) * 50;
-
-  // 9:20 → 10:05 DATA
-
-  const cePrices = [
-
-    102,105,99,110,115,108,
-    120,118,122,117,113,
-    109,106,111,107
-
-  ];
-
-  const pePrices = [
-
-    95,91,97,102,110,
-    118,125,135,130,
-    121,116,112,108
-
-  ];
-
-  // RANGE
-
-  const ceHigh =
-  Math.max(...cePrices);
-
-  const ceLow =
-  Math.min(...cePrices);
-
-  const peHigh =
-  Math.max(...pePrices);
-
-  const peLow =
-  Math.min(...pePrices);
-
-  grid.innerHTML = `
-
-    <div class="card">
-
-      <div class="symbol">
-        NIFTY ${callStrike} CE
-      </div>
-
-      <div class="price">
-        SL : ${ceHigh}
-      </div>
-
-      <div class="change green">
-        SELL : ${ceLow}
-      </div>
-
-    </div>
-
-    <div class="card">
-
-      <div class="symbol">
-        NIFTY ${putStrike} PE
-      </div>
-
-      <div class="price">
-        SL : ${peHigh}
-      </div>
-
-      <div class="change red">
-        SELL : ${peLow}
-      </div>
-
-    </div>
-
-  `;
-
-}
-
+// ════════════════════════════════════════════
+// MARKET STATUS
+// ════════════════════════════════════════════
 function updateMarketStatus(){
-
-  const now = new Date();
-
-  const hour = now.getHours();
-
-  const status =
-  document.getElementById("marketStatus");
-
-  if(hour >= 9 && hour <= 15){
-
-    status.innerHTML =
-    "🟢 Indian Market Live";
-
-  }
-
-  else{
-
-    status.innerHTML =
-    "🔴 Market Closed";
-
-  }
-
+  const t=getIST(), h=t.getHours(), m=t.getMinutes(), mins=h*60+m;
+  const el=document.getElementById('marketStatus');
+  if(mins>=555&&mins<=930) el.innerHTML='🟢 Indian Market Live';
+  else if(mins>=540&&mins<555) el.innerHTML='🟡 Pre-Market';
+  else el.innerHTML='🔴 Market Closed';
 }
 
+// ════════════════════════════════════════════
+// MAIN LOAD
+// ════════════════════════════════════════════
 async function startLoad(){
-
-  await loadMainMarket();
-
-  await getOptionData();
-
   updateMarketStatus();
-
+  await loadMainMarket();
+  await updateOptionTracker();
+  renderHistory();
 }
 
+// Init
 startLoad();
+setInterval(async()=>{
+  updateMarketStatus();
+  await updateOptionTracker();
+},30000); // every 30s for option tracking
 
-setInterval(startLoad,60000);
-
+// World market refresh every 60s
+setInterval(loadMainMarket, 60000);
 </script>
-
 </body>
-
 </html>
