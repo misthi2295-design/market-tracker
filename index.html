@@ -1,8 +1,3 @@
-# DR Brokers Premium Market Tracker
-
-## Replace Full `index.html` With This Code
-
-```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -181,7 +176,7 @@ h2{
 
 </div>
 
-<h2>🌍 Global Markets</h2>
+<h2>🌍 World Market Indices</h2>
 
 <div class="grid" id="marketGrid">
 
@@ -191,17 +186,13 @@ h2{
 
 </div>
 
-<h2>🚀 Top Gainers</h2>
+<h2>🚀 Top Gainer Index</h2>
 
 <div class="grid" id="gainersGrid"></div>
 
-<h2>📉 Top Losers</h2>
+<h2>📉 Top Loser Index</h2>
 
 <div class="grid" id="losersGrid"></div>
-
-<h2>₿ Crypto Market</h2>
-
-<div class="grid" id="cryptoGrid"></div>
 
 <div class="mood-box">
 
@@ -210,7 +201,7 @@ h2{
   </div>
 
   <div class="mood-value" id="marketMood">
-    Bullish Momentum
+    Bullish Momentum 🚀
   </div>
 
 </div>
@@ -246,76 +237,21 @@ const symbols = [
   {
     name:"BANK NIFTY",
     symbol:"^NSEBANK"
-  }
-
-];
-
-const gainers = [
-
-  {
-    name:"NVIDIA",
-    symbol:"NVDA"
   },
 
   {
-    name:"Tesla",
-    symbol:"TSLA"
-  },
-
-  {
-    name:"Meta",
-    symbol:"META"
-  },
-
-  {
-    name:"Netflix",
-    symbol:"NFLX"
-  }
-
-];
-
-const losers = [
-
-  {
-    name:"Intel",
-    symbol:"INTC"
-  },
-
-  {
-    name:"PayPal",
-    symbol:"PYPL"
-  },
-
-  {
-    name:"Apple",
-    symbol:"AAPL"
-  },
-
-  {
-    name:"Alibaba",
-    symbol:"BABA"
-  }
-
-];
-
-const crypto = [
-
-  {
-    name:"Bitcoin",
+    name:"BTC/USD",
     symbol:"BTC-USD"
   },
 
   {
-    name:"Ethereum",
+    name:"ETH/USD",
     symbol:"ETH-USD"
-  },
-
-  {
-    name:"Solana",
-    symbol:"SOL-USD"
   }
 
 ];
+
+let marketData = [];
 
 async function fetchYahoo(symbol){
 
@@ -368,55 +304,59 @@ async function fetchYahoo(symbol){
 
 }
 
-function createCard(item,data,color){
+async function loadMainMarket(){
 
-  return `
-
-  <div class="card">
-
-    <div class="symbol">
-      ${item.name}
-    </div>
-
-    <div class="price">
-      ${data.price}
-    </div>
-
-    <div class="change ${color}">
-
-      ${color === 'green' ? '▲' : '▼'}
-
-      ${data.change}
-
-      (${data.percent}%)
-
-    </div>
-
-  </div>
-
-  `;
-
-}
-
-async function loadSection(array,id){
-
-  const grid = document.getElementById(id);
+  const grid =
+  document.getElementById("marketGrid");
 
   let html = "";
 
-  for(const item of array){
+  marketData = [];
 
-    const data = await fetchYahoo(item.symbol);
+  for(const item of symbols){
+
+    const data =
+    await fetchYahoo(item.symbol);
 
     if(data){
 
-      const positive = Number(data.change) >= 0;
+      const positive =
+      Number(data.change) >= 0;
 
-      html += createCard(
-        item,
-        data,
-        positive ? 'green' : 'red'
-      );
+      marketData.push({
+
+        name:item.name,
+        price:data.price,
+        change:Number(data.change),
+        percent:data.percent
+
+      });
+
+      html += `
+
+      <div class="card">
+
+        <div class="symbol">
+          ${item.name}
+        </div>
+
+        <div class="price">
+          ${data.price}
+        </div>
+
+        <div class="change ${positive ? "green" : "red"}">
+
+          ${positive ? "▲" : "▼"}
+
+          ${data.change}
+
+          (${data.percent}%)
+
+        </div>
+
+      </div>
+
+      `;
 
     }
 
@@ -424,16 +364,86 @@ async function loadSection(array,id){
 
   grid.innerHTML = html;
 
+  loadTopMovers();
+
+}
+
+function loadTopMovers(){
+
+  const gainersGrid =
+  document.getElementById("gainersGrid");
+
+  const losersGrid =
+  document.getElementById("losersGrid");
+
+  const sorted =
+  [...marketData].sort((a,b)=>b.change-a.change);
+
+  const topGainer = sorted[0];
+
+  const topLoser =
+  sorted[sorted.length - 1];
+
+  gainersGrid.innerHTML = `
+
+    <div class="card">
+
+      <div class="symbol">
+        ${topGainer.name}
+      </div>
+
+      <div class="price">
+        ${topGainer.price}
+      </div>
+
+      <div class="change green">
+
+        ▲ ${topGainer.change}
+
+        (${topGainer.percent}%)
+
+      </div>
+
+    </div>
+
+  `;
+
+  losersGrid.innerHTML = `
+
+    <div class="card">
+
+      <div class="symbol">
+        ${topLoser.name}
+      </div>
+
+      <div class="price">
+        ${topLoser.price}
+      </div>
+
+      <div class="change red">
+
+        ▼ ${topLoser.change}
+
+        (${topLoser.percent}%)
+
+      </div>
+
+    </div>
+
+  `;
+
 }
 
 function updateMood(){
 
   const moods = [
+
     "Bullish Momentum 🚀",
     "Buy On Dips 📈",
     "Volatile Market ⚡",
     "Profit Booking Zone 💰",
     "Range Bound Market 📊"
+
   ];
 
   const randomMood =
@@ -455,13 +465,15 @@ function updateMarketStatus(){
 
   if(hour >= 9 && hour <= 15){
 
-    status.innerHTML = "🟢 Indian Market Live";
+    status.innerHTML =
+    "🟢 Indian Market Live";
 
   }
 
   else{
 
-    status.innerHTML = "🔴 Market Closed";
+    status.innerHTML =
+    "🔴 Market Closed";
 
   }
 
@@ -469,13 +481,7 @@ function updateMarketStatus(){
 
 async function startLoad(){
 
-  await loadSection(symbols,"marketGrid");
-
-  await loadSection(gainers,"gainersGrid");
-
-  await loadSection(losers,"losersGrid");
-
-  await loadSection(crypto,"cryptoGrid");
+  await loadMainMarket();
 
   updateMood();
 
@@ -492,5 +498,3 @@ setInterval(startLoad,60000);
 </body>
 
 </html>
-```
-
