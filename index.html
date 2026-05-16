@@ -15,7 +15,8 @@ async function getOptionData(){
   const callStrike =
   Math.ceil(niftySpot / 50) * 50;
 
-  // 9:20 → 10:05 DATA
+  // DEMO 1-MIN DATA
+  // 9:20 → 10:05 ONLY
 
   const cePrices = [
 
@@ -33,7 +34,8 @@ async function getOptionData(){
 
   ];
 
-  // HIGH LOW
+  // ACTUAL HIGH LOW
+  // 9:20 → 10:05 RANGE
 
   const ceHigh =
   Math.max(...cePrices);
@@ -56,11 +58,11 @@ async function getOptionData(){
       </div>
 
       <div class="price">
-        SL : ${ceHigh}
+        HIGH : ${ceHigh}
       </div>
 
       <div class="change green">
-        SELL : ${ceLow}
+        LOW : ${ceLow}
       </div>
 
     </div>
@@ -72,11 +74,11 @@ async function getOptionData(){
       </div>
 
       <div class="price">
-        SL : ${peHigh}
+        HIGH : ${peHigh}
       </div>
 
       <div class="change red">
-        SELL : ${peLow}
+        LOW : ${peLow}
       </div>
 
     </div>
