@@ -1,13 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>DR Brokers Market Tracker</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
+
+body{
+  background:#050816;
+  color:white;
+  padding:20px;
+}
+
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:20px;
+  margin-bottom:30px;
+}
+
+.brand{
+  font-size:42px;
+  font-weight:bold;
+  color:#6c63ff;
+}
+
+.tagline{
+  color:#aaa;
+  margin-top:5px;
+}
+
+.refresh-btn{
+  background:#6c63ff;
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:bold;
+}
+
+.market-status{
+  background:#11182d;
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:15px;
+}
+
+h2{
+  margin-top:40px;
+  margin-bottom:20px;
+}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:20px;
+}
+
+.card{
+  background:#11182d;
+  padding:22px;
+  border-radius:18px;
+  transition:0.3s;
+  box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
+
+.card:hover{
+  transform:translateY(-5px);
+}
+
+.symbol{
+  color:#a0a0a0;
+  margin-bottom:14px;
+  font-size:15px;
+}
+
+.price{
+  font-size:30px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.change{
+  font-size:18px;
+  font-weight:bold;
+}
+
+.green{
+  color:#00ff9d;
+}
+
+.red{
+  color:#ff4d6d;
+}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  color:#888;
+  font-size:14px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+
+  <div>
+
+    <div class="brand">
+      DR Brokers
+    </div>
+
+    <div class="tagline">
+      Professional Live Market Dashboard
+    </div>
+
+  </div>
+
+  <div class="market-status" id="marketStatus">
+    🟢 Market Active
+  </div>
+
+  <button class="refresh-btn" onclick="startLoad()">
+    Refresh
+  </button>
+
+</div>
+
+<!-- WORLD MARKET -->
+
+<h2>🌍 World Market Indices</h2>
+
+<div class="grid" id="marketGrid"></div>
+
+<!-- TOP GAINERS -->
+
+<h2>🚀 Top 3 Gainer Indices</h2>
+
+<div class="grid" id="topGainersGrid"></div>
+
+<!-- TOP LOSERS -->
+
+<h2>📉 Top 3 Loser Indices</h2>
+
+<div class="grid" id="topLosersGrid"></div>
+
+<!-- OPTION TRACKER -->
+
+<h2>📊 Nifty Option Range Tracker</h2>
+
+<div class="grid" id="optionTrackerGrid"></div>
+
+<div class="footer">
+  Powered By DR Brokers • Auto Refresh Every 60 Seconds
+</div>
+
+<script>
+
+const symbols = [
+
+  {
+    name:"S&P 500",
+    symbol:"^GSPC"
+  },
+
+  {
+    name:"NASDAQ",
+    symbol:"^IXIC"
+  },
+
+  {
+    name:"Dow Jones",
+    symbol:"^DJI"
+  },
+
+  {
+    name:"NIFTY 50",
+    symbol:"^NSEI"
+  },
+
+  {
+    name:"BANK NIFTY",
+    symbol:"^NSEBANK"
+  },
+
+  {
+    name:"BTC/USD",
+    symbol:"BTC-USD"
+  },
+
+  {
+    name:"ETH/USD",
+    symbol:"ETH-USD"
+  }
+
+];
+
+let marketData = [];
+
+async function fetchYahoo(symbol){
+
+  try{
+
+    const proxy =
+    "https://api.allorigins.win/get?url=";
+
+    const target =
+    encodeURIComponent(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`
+    );
+
+    const response =
+    await fetch(proxy + target);
+
+    const wrappedData =
+    await response.json();
+
+    const data =
+    JSON.parse(wrappedData.contents);
+
+    if(
+      !data.chart ||
+      !data.chart.result ||
+      !data.chart.result[0]
+    ){
+      return null;
+    }
+
+    const result =
+    data.chart.result[0];
+
+    const meta =
+    result.meta;
+
+    const price =
+    meta.regularMarketPrice;
+
+    const prevClose =
+    meta.previousClose;
+
+    const change =
+    (price - prevClose).toFixed(2);
+
+    const percent =
+    (((price - prevClose) / prevClose) * 100)
+    .toFixed(2);
+
+    return {
+
+      price: price.toFixed(2),
+      change,
+      percent
+
+    };
+
+  }
+
+  catch(error){
+
+    console.log(error);
+
+    return null;
+
+  }
+
+}
+
+function createCard(item,color){
+
+  return `
+
+    <div class="card">
+
+      <div class="symbol">
+        ${item.name}
+      </div>
+
+      <div class="price">
+        ${item.price}
+      </div>
+
+      <div class="change ${color}">
+
+        ${color === "green" ? "▲" : "▼"}
+
+        ${item.change}
+
+        (${item.percent}%)
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+async function loadMainMarket(){
+
+  const grid =
+  document.getElementById("marketGrid");
+
+  let html = "";
+
+  marketData = [];
+
+  for(const item of symbols){
+
+    const data =
+    await fetchYahoo(item.symbol);
+
+    if(data){
+
+      const positive =
+      Number(data.change) >= 0;
+
+      marketData.push({
+
+        name:item.name,
+        price:data.price,
+        change:Number(data.change),
+        percent:data.percent
+
+      });
+
+      html += `
+
+      <div class="card">
+
+        <div class="symbol">
+          ${item.name}
+        </div>
+
+        <div class="price">
+          ${data.price}
+        </div>
+
+        <div class="change ${positive ? "green" : "red"}">
+
+          ${positive ? "▲" : "▼"}
+
+          ${data.change}
+
+          (${data.percent}%)
+
+        </div>
+
+      </div>
+
+      `;
+
+    }
+
+  }
+
+  grid.innerHTML = html;
+
+  loadTopMovers();
+
+}
+
+function loadTopMovers(){
+
+  if(marketData.length === 0){
+    return;
+  }
+
+  const gainersGrid =
+  document.getElementById("topGainersGrid");
+
+  const losersGrid =
+  document.getElementById("topLosersGrid");
+
+  const sorted =
+  [...marketData]
+  .sort((a,b)=>b.change-a.change);
+
+  const topGainers =
+  sorted.slice(0,3);
+
+  const topLosers =
+  sorted.slice(-3).reverse();
+
+  let gainersHTML = "";
+  let losersHTML = "";
+
+  topGainers.forEach(item=>{
+
+    gainersHTML +=
+    createCard(item,"green");
+
+  });
+
+  topLosers.forEach(item=>{
+
+    losersHTML +=
+    createCard(item,"red");
+
+  });
+
+  gainersGrid.innerHTML =
+  gainersHTML;
+
+  losersGrid.innerHTML =
+  losersHTML;
+
+}
+
 async function getOptionData(){
 
   const grid =
   document.getElementById("optionTrackerGrid");
 
-  // DEMO SPOT PRICE
-
   const niftySpot = 24005;
-
-  // STRIKE LOGIC
 
   const putStrike =
   Math.floor(niftySpot / 50) * 50;
@@ -15,8 +439,7 @@ async function getOptionData(){
   const callStrike =
   Math.ceil(niftySpot / 50) * 50;
 
-  // DEMO 1-MIN DATA
-  // 9:20 → 10:05 ONLY
+  // 9:20 → 10:05 DATA
 
   const cePrices = [
 
@@ -33,9 +456,6 @@ async function getOptionData(){
     121,116,112,108
 
   ];
-
-  // ACTUAL HIGH LOW
-  // 9:20 → 10:05 RANGE
 
   const ceHigh =
   Math.max(...cePrices);
@@ -58,11 +478,11 @@ async function getOptionData(){
       </div>
 
       <div class="price">
-        HIGH : ${ceHigh}
+        SL : ${ceHigh}
       </div>
 
       <div class="change green">
-        LOW : ${ceLow}
+        SELL : ${ceLow}
       </div>
 
     </div>
@@ -74,11 +494,11 @@ async function getOptionData(){
       </div>
 
       <div class="price">
-        HIGH : ${peHigh}
+        SL : ${peHigh}
       </div>
 
       <div class="change red">
-        LOW : ${peLow}
+        SELL : ${peLow}
       </div>
 
     </div>
@@ -86,3 +506,48 @@ async function getOptionData(){
   `;
 
 }
+
+function updateMarketStatus(){
+
+  const now = new Date();
+
+  const hour = now.getHours();
+
+  const status =
+  document.getElementById("marketStatus");
+
+  if(hour >= 9 && hour <= 15){
+
+    status.innerHTML =
+    "🟢 Indian Market Live";
+
+  }
+
+  else{
+
+    status.innerHTML =
+    "🔴 Market Closed";
+
+  }
+
+}
+
+async function startLoad(){
+
+  await loadMainMarket();
+
+  await getOptionData();
+
+  updateMarketStatus();
+
+}
+
+startLoad();
+
+setInterval(startLoad,60000);
+
+</script>
+
+</body>
+
+</html>
