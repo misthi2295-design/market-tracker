@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Market Tracker 📈</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#0d0d14;color:#e2e2e8;min-height:100vh}
+
+/* TOPBAR */
+.topbar{background:#13131f;border-bottom:1px solid #1e1e2e;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:99}
+.logo{font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px}
+.dot{width:9px;height:9px;border-radius:50%;background:#22c55e;animation:blink 1.5s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-right{display:flex;align-items:center;gap:8px}
+#clock{font-size:12px;color:#555;background:#0d0d14;padding:4px 10px;border-radius:20px;border:1px solid #1e1e2e}
+.rbtn{font-size:12px;padding:6px 13px;border:1px solid #1e1e2e;border-radius:8px;background:transparent;color:#777;cursor:pointer}
+.rbtn:hover{background:#1e1e2e;color:#e2e2e8}
+
+/* MAIN */
+.wrap{max-width:980px;margin:0 auto;padding:20px 14px}
+
+/* INDICES */
+.idx-row{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
+.idx-box{background:#13131f;border:1px solid #1e1e2e;border-radius:10px;padding:11px 13px}
+.idx-label{font-size:11px;color:#555;margin-bottom:3px;font-weight:600;letter-spacing:.4px}
+.idx-price{font-size:15px;font-weight:700}
+.idx-pct{font-size:12px;font-weight:600;margin-top:2px}
+.g{color:#4ade80}.r{color:#f87171}
+
+/* SENTIMENT */
+.sent-bar{background:#13131f;border:1px solid #1e1e2e;border-radius:12px;padding:14px 18px;margin-bottom:18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.sent-item .lbl{font-size:11px;color:#555;font-weight:600;letter-spacing:.4px;margin-bottom:3px}
+.sent-item .val{font-size:20px;font-weight:700}
+.bar-wrap{flex:1;min-width:180px}
+.bar-labels{display:flex;justify-content:space-between;font-size:10px;color:#444;margin-bottom:4px}
+.bar-bg{height:8px;background:#0d0d14;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width .6s}
+
+/* TABS */
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{font-size:13px;padding:6px 18px;border-radius:20px;border:1px solid #1e1e2e;background:transparent;color:#666;cursor:pointer;transition:all .2s}
+.tab.on{background:#6c63ff;color:#fff;border-color:#6c63ff}
+.tab:hover:not(.on){background:#1e1e2e;color:#e2e2e8}
+
+/* GL GRID */
+.gl{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.panel{background:#13131f;border:1px solid #1e1e2e;border-radius:12px;overflow:hidden}
+.ph{padding:11px 16px;border-bottom:1px solid #1e1e2e;display:flex;align-items:center;justify-content:space-between}
+.ph h3{font-size:14px;font-weight:700;display:flex;align-items:center;gap:5px}
+.badge-ct{font-size:11px;color:#555;background:#0d0d14;padding:2px 8px;border-radius:20px;border:1px solid #1e1e2e}
+
+.trow{display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid #131320;cursor:default;transition:background .15s}
+.trow:last-child{border-bottom:none}
+.trow:hover{background:#16162a}
+.t-l{display:flex;align-items:center;gap:9px}
+.ico{width:33px;height:33px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.sym{font-size:13px;font-weight:700}
+.nm{font-size:11px;color:#555;margin-top:1px;max-width:105px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-r{text-align:right}
+.pct{font-size:13px;font-weight:700}
+.chg{font-size:11px;font-weight:600;padding:2px 7px;border-radius:20px;margin-top:2px;display:inline-block}
+.chg.g{background:#14532d;color:#4ade80}
+.chg.r{background:#450a0a;color:#f87171}
+
+/* STATUS */
+.status-bar{text-align:center;font-size:11px;color:#3a3a50;padding:18px 0 28px;margin-top:8px;border-top:1px solid #131320}
+
+/* LOADING */
+.loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:50px;gap:12px;color:#444;font-size:14px;grid-column:1/-1}
+.spin{width:30px;height:30px;border:3px solid #1e1e2e;border-top-color:#6c63ff;border-radius:50%;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.err-box{background:#1a0a0a;border:1px solid #5a1a1a;border-radius:10px;padding:13px 16px;color:#f87171;font-size:13px;margin-bottom:14px;display:none}
+
+@media(max-width:640px){.idx-row{grid-template-columns:repeat(3,1fr)}.gl{grid-template-columns:1fr}}
+@media(max-width:380px){.idx-row{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">📈 Market Tracker <div class="dot"></div></div>
+  <div class="topbar-right">
+    <span id="clock"></span>
+    <button class="rbtn" onclick="loadData()">⟳ Refresh</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab on" onclick="switchTab('stocks',this)">🇺🇸 US Stocks</button>
+    <button class="tab" onclick="switchTab('nse',this)">🇮🇳 NSE India</button>
+    <button class="tab" onclick="switchTab('crypto',this)">₿ Crypto</button>
+  </div>
+
+  <!-- SENTIMENT -->
+  <div class="sent-bar">
+    <div class="sent-item"><div class="lbl">MARKET MOOD</div><div class="val" id="mood">—</div></div>
+    <div class="bar-wrap">
+      <div class="bar-labels"><span>Bearish</span><span>Neutral</span><span>Bullish</span></div>
+      <div class="bar-bg"><div class="bar-fill" id="mbar" style="width:50%;background:#6c63ff"></div></div>
+    </div>
+    <div class="sent-item" style="text-align:right"><div class="lbl">SCORE</div><div class="val" id="mscore">—</div></div>
+  </div>
+
+  <!-- INDICES -->
+  <div class="idx-row" id="idx-row">
+    <div class="idx-box"><div class="idx-label">Loading...</div></div>
+  </div>
+
+  <!-- ERROR -->
+  <div class="err-box" id="err-box">⚠️ <span id="err-msg"></span></div>
+
+  <!-- GAINERS / LOSERS -->
+  <div class="gl" id="gl">
+    <div class="loader"><div class="spin"></div>Data load ho raha hai...</div>
+  </div>
+
+  <div class="status-bar">
+    Data: Finnhub.io &nbsp;·&nbsp; Auto-refresh: 60s &nbsp;·&nbsp; <span id="lupd">—</span>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ────────────────────────────────────────────────
+const API = 'cvo05v9r01qt76v5qrs0cvo05v9r01qt76v5qrsg'; // Finnhub free demo key
+
+const TABS = {
+  stocks:{
+    indices:[
+      {sym:'SPY',  lbl:'S&P 500'},
+      {sym:'QQQ',  lbl:'NASDAQ'},
+      {sym:'DIA',  lbl:'Dow Jones'},
+      {sym:'IWM',  lbl:'Russell 2K'},
+      {sym:'NVDA', lbl:'NVIDIA'}
+    ],
+    movers:['AAPL','MSFT','GOOGL','AMZN','NVDA','TSLA','META','AMD','INTC','BABA','PFE','BA','DIS','NFLX','PYPL','UBER','SNAP','COIN','PLTR','SOFI'],
+    names:{AAPL:'Apple',MSFT:'Microsoft',GOOGL:'Alphabet',AMZN:'Amazon',NVDA:'NVIDIA',TSLA:'Tesla',META:'Meta',AMD:'AMD',INTC:'Intel',BABA:'Alibaba',PFE:'Pfizer',BA:'Boeing',DIS:'Disney',NFLX:'Netflix',PYPL:'PayPal',UBER:'Uber',SNAP:'Snap',COIN:'Coinbase',PLTR:'Palantir',SOFI:'SoFi'}
+  },
+  nse:{
+    indices:[
+      {sym:'NIFTY_50',   lbl:'Nifty 50'},
+      {sym:'NIFTY_BANK', lbl:'Bank Nifty'},
+      {sym:'INFY',       lbl:'Infosys'},
+      {sym:'TCS',        lbl:'TCS'},
+      {sym:'RELIANCE',   lbl:'Reliance'}
+    ],
+    movers:['RELIANCE','TCS','INFY','HDFCBANK','ICICIBANK','HINDUNILVR','BAJFINANCE','WIPRO','AXISBANK','KOTAKBANK','SBIN','TATAMOTORS','SUNPHARMA','DRREDDY','MARUTI','LTIM','HCLTECH','TECHM','CIPLA','DIVISLAB'],
+    names:{RELIANCE:'Reliance',TCS:'TCS',INFY:'Infosys',HDFCBANK:'HDFC Bank',ICICIBANK:'ICICI Bank',HINDUNILVR:'HUL',BAJFINANCE:'Bajaj Finance',WIPRO:'Wipro',AXISBANK:'Axis Bank',KOTAKBANK:'Kotak Bank',SBIN:'SBI',TATAMOTORS:'Tata Motors',SUNPHARMA:'Sun Pharma',DRREDDY:"Dr Reddy's",MARUTI:'Maruti',LTIM:'LTIMindtree',HCLTECH:'HCL Tech',TECHM:'Tech M',CIPLA:'Cipla',DIVISLAB:"Divi's Labs"}
+  },
+  crypto:{
+    indices:[
+      {sym:'BINANCE:BTCUSDT', lbl:'Bitcoin'},
+      {sym:'BINANCE:ETHUSDT', lbl:'Ethereum'},
+      {sym:'BINANCE:BNBUSDT', lbl:'BNB'},
+      {sym:'BINANCE:SOLUSDT', lbl:'Solana'},
+      {sym:'BINANCE:XRPUSDT', lbl:'XRP'}
+    ],
+    movers:['BINANCE:BTCUSDT','BINANCE:ETHUSDT','BINANCE:BNBUSDT','BINANCE:SOLUSDT','BINANCE:XRPUSDT','BINANCE:DOGEUSDT','BINANCE:ADAUSDT','BINANCE:AVAXUSDT','BINANCE:LINKUSDT','BINANCE:MATICUSDT','BINANCE:DOTUSDT','BINANCE:LTCUSDT','BINANCE:UNIUSDT','BINANCE:ATOMUSDT','BINANCE:XLMUSDT'],
+    names:{'BINANCE:BTCUSDT':'Bitcoin','BINANCE:ETHUSDT':'Ethereum','BINANCE:BNBUSDT':'BNB','BINANCE:SOLUSDT':'Solana','BINANCE:XRPUSDT':'Ripple','BINANCE:DOGEUSDT':'Dogecoin','BINANCE:ADAUSDT':'Cardano','BINANCE:AVAXUSDT':'Avalanche','BINANCE:LINKUSDT':'Chainlink','BINANCE:MATICUSDT':'Polygon','BINANCE:DOTUSDT':'Polkadot','BINANCE:LTCUSDT':'Litecoin','BINANCE:UNIUSDT':'Uniswap','BINANCE:ATOMUSDT':'Cosmos','BINANCE:XLMUSDT':'Stellar'}
+  }
+};
+
+const COLORS=['#6c63ff','#ec4899','#f59e0b','#10b981','#3b82f6','#f97316','#8b5cf6','#14b8a6','#e11d48','#0ea5e9'];
+const col = s => COLORS[[...s].reduce((a,c)=>a+c.charCodeAt(0),0)%COLORS.length];
+const ico = s => s.replace('BINANCE:','').replace('_USDT','').slice(0,3).toUpperCase();
+
+let tab='stocks', timer=null;
+
+// ─── CLOCK ─────────────────────────────────────────────────
+setInterval(()=>{
+  document.getElementById('clock').textContent=
+    new Date().toLocaleTimeString('en-IN',{hour12:false,timeZone:'Asia/Kolkata'})+' IST';
+},1000);
+
+// ─── TAB SWITCH ────────────────────────────────────────────
+function switchTab(t,el){
+  tab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  loadData();
+}
+
+// ─── FETCH ONE QUOTE ───────────────────────────────────────
+async function q(sym){
+  try{
+    // For NSE stocks, add .NS suffix
+    const fsym = tab==='nse' && !sym.includes(':') ? sym+'.NS' : sym;
+    const r=await fetch(`https://finnhub.io/api/v1/quote?symbol=${encodeURIComponent(fsym)}&token=${API}`);
+    const d=await r.json();
+    if(d&&typeof d.c==='number'&&d.c>0) return{sym,price:d.c,chg:d.d||0,pct:d.dp||0,high:d.h,low:d.l,prev:d.pc};
+  }catch{}
+  return null;
+}
+
+// ─── LOAD ALL DATA ─────────────────────────────────────────
+async function loadData(){
+  showErr('');
+  document.getElementById('gl').innerHTML='<div class="loader"><div class="spin"></div>Live data aa raha hai...</div>';
+
+  const cfg=TABS[tab];
+
+  // fetch indices + movers in parallel
+  const [idxData, moverData] = await Promise.all([
+    Promise.all(cfg.indices.map(i=>q(i.sym))),
+    Promise.all(cfg.movers.map(s=>q(s)))
+  ]);
+
+  // ── INDICES ──
+  document.getElementById('idx-row').innerHTML = cfg.indices.map((idx,i)=>{
+    const d=idxData[i];
+    if(!d) return `<div class="idx-box"><div class="idx-label">${idx.lbl}</div><div class="idx-price" style="color:#444">—</div></div>`;
+    const up=d.pct>=0;
+    return`<div class="idx-box">
+      <div class="idx-label">${idx.lbl}</div>
+      <div class="idx-price ${up?'g':'r'}">${fmt(d.price,idx.sym)}</div>
+      <div class="idx-pct ${up?'g':'r'}">${up?'▲':'▼'} ${Math.abs(d.pct).toFixed(2)}%</div>
+    </div>`;
+  }).join('');
+
+  // ── MOVERS ──
+  const valid=moverData.filter(Boolean);
+  if(!valid.length){showErr('Data nahi mila. API limit ho gayi hogi — 1 minute baad try karo.');document.getElementById('gl').innerHTML='';return;}
+
+  valid.sort((a,b)=>b.pct-a.pct);
+  const gainers=valid.filter(x=>x.pct>0).slice(0,8);
+  const losers=[...valid].sort((a,b)=>a.pct-b.pct).filter(x=>x.pct<0).slice(0,8);
+
+  // ── SENTIMENT ──
+  const sc=Math.round((gainers.length/valid.length)*100);
+  const mood=sc>=65?'Bullish 🚀':sc<=35?'Bearish 📉':'Neutral ⚖️';
+  const mc=sc>=65?'#4ade80':sc<=35?'#f87171':'#f59e0b';
+  document.getElementById('mood').textContent=mood;
+  document.getElementById('mood').style.color=mc;
+  document.getElementById('mscore').textContent=sc+'/100';
+  document.getElementById('mscore').style.color=mc;
+  document.getElementById('mbar').style.width=sc+'%';
+  document.getElementById('mbar').style.background=mc;
+
+  // ── RENDER TABLE ──
+  const row=(d,up)=>{
+    const s=d.sym, c=col(s), label=TABS[tab].names[s]||s.replace('BINANCE:','').replace('_USDT','');
+    const dispSym=s.replace('BINANCE:','').replace('_USDT','').replace('.NS','');
+    return`<div class="trow">
+      <div class="t-l">
+        <div class="ico" style="background:${c}22;color:${c}">${ico(s)}</div>
+        <div><div class="sym">${dispSym}</div><div class="nm">${label}</div></div>
+      </div>
+      <div class="t-r">
+        <div class="pct ${up?'g':'r'}">${up?'+':''}${d.pct.toFixed(2)}%</div>
+        <span class="chg ${up?'g':'r'}">${up?'▲':'▼'} ${Math.abs(d.chg).toFixed(tab==='crypto'?4:2)}</span>
+      </div>
+    </div>`;
+  };
+
+  document.getElementById('gl').innerHTML=`
+    <div class="panel">
+      <div class="ph"><h3 style="color:#4ade80">🟢 Top Gainers</h3><span class="badge-ct">${gainers.length} stocks</span></div>
+      ${gainers.length?gainers.map(d=>row(d,true)).join(''):'<div style="padding:18px;color:#444;font-size:13px;text-align:center">Koi gainer nahi aaj</div>'}
+    </div>
+    <div class="panel">
+      <div class="ph"><h3 style="color:#f87171">🔴 Top Losers</h3><span class="badge-ct">${losers.length} stocks</span></div>
+      ${losers.length?losers.map(d=>row(d,false)).join(''):'<div style="padding:18px;color:#444;font-size:13px;text-align:center">Koi loser nahi aaj</div>'}
+    </div>`;
+
+  document.getElementById('lupd').textContent='Updated: '+new Date().toLocaleTimeString('en-IN',{timeZone:'Asia/Kolkata'})+' IST';
+}
+
+function fmt(p,sym){
+  if(!p||isNaN(p))return'—';
+  if(p>1000)return p.toLocaleString('en-IN',{maximumFractionDigits:0});
+  if(p<1)return'$'+p.toFixed(4);
+  return(sym&&(sym.includes('NSE')||sym.includes('.NS')||tab==='nse')?'₹':'$')+p.toFixed(2);
+}
+
+function showErr(msg){
+  const el=document.getElementById('err-box');
+  document.getElementById('err-msg').textContent=msg;
+  el.style.display=msg?'block':'none';
+}
+
+// ─── AUTO REFRESH ──────────────────────────────────────────
+loadData();
+setInterval(loadData,60000);
+</script>
+</body>
+</html>
