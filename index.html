@@ -91,7 +91,7 @@ h2{
 }
 
 .price{
-  font-size:32px;
+  font-size:30px;
   font-weight:bold;
   margin-bottom:10px;
 }
@@ -109,36 +109,11 @@ h2{
   color:#ff4d6d;
 }
 
-.mood-box{
-  margin-top:35px;
-  background:#11182d;
-  padding:25px;
-  border-radius:18px;
-}
-
-.mood-title{
-  font-size:24px;
-  margin-bottom:10px;
-}
-
-.mood-value{
-  font-size:20px;
-  font-weight:bold;
-  color:#00ff9d;
-}
-
 .footer{
   text-align:center;
   margin-top:40px;
   color:#888;
   font-size:14px;
-}
-
-.loader{
-  text-align:center;
-  font-size:20px;
-  color:#aaa;
-  margin-top:80px;
 }
 
 </style>
@@ -171,17 +146,11 @@ h2{
 
 </div>
 
-<!-- WORLD INDICES -->
+<!-- WORLD MARKET -->
 
 <h2>🌍 World Market Indices</h2>
 
-<div class="grid" id="marketGrid">
-
-  <div class="loader">
-    Loading Market Data...
-  </div>
-
-</div>
+<div class="grid" id="marketGrid"></div>
 
 <!-- TOP GAINERS -->
 
@@ -195,19 +164,11 @@ h2{
 
 <div class="grid" id="topLosersGrid"></div>
 
-<!-- AI MOOD -->
+<!-- OPTION TRACKER -->
 
-<div class="mood-box">
+<h2>📊 Nifty Option Range Tracker</h2>
 
-  <div class="mood-title">
-    🤖 AI Market Mood
-  </div>
-
-  <div class="mood-value" id="marketMood">
-    Bullish Momentum 🚀
-  </div>
-
-</div>
+<div class="grid" id="optionTrackerGrid"></div>
 
 <div class="footer">
   Powered By DR Brokers • Auto Refresh Every 60 Seconds
@@ -453,23 +414,74 @@ function loadTopMovers(){
 
 }
 
-function updateMood(){
+async function getOptionData(){
 
-  const moods = [
+  const grid =
+  document.getElementById("optionTrackerGrid");
 
-    "Bullish Momentum 🚀",
-    "Buy On Dips 📈",
-    "Volatile Market ⚡",
-    "Profit Booking Zone 💰",
-    "Range Bound Market 📊"
+  // DEMO SPOT PRICE
 
-  ];
+  const niftySpot = 24005;
 
-  const randomMood =
-  moods[Math.floor(Math.random()*moods.length)];
+  // ATM LOGIC
 
-  document.getElementById("marketMood")
-  .innerText = randomMood;
+  const putStrike =
+  Math.floor(niftySpot / 50) * 50;
+
+  const callStrike =
+  Math.ceil(niftySpot / 50) * 50;
+
+  // DEMO HIGH LOW
+
+  const callHigh = 122;
+  const callLow = 88;
+
+  const putHigh = 135;
+  const putLow = 91;
+
+  grid.innerHTML = `
+
+    <div class="card">
+
+      <div class="symbol">
+        NIFTY ${callStrike} CE
+      </div>
+
+      <div class="price">
+        HIGH: ${callHigh}
+      </div>
+
+      <div class="change green">
+        LOW: ${callLow}
+      </div>
+
+      <div style="margin-top:10px;color:#aaa;">
+        9:20 → 10:05 Range
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="symbol">
+        NIFTY ${putStrike} PE
+      </div>
+
+      <div class="price">
+        HIGH: ${putHigh}
+      </div>
+
+      <div class="change red">
+        LOW: ${putLow}
+      </div>
+
+      <div style="margin-top:10px;color:#aaa;">
+        9:20 → 10:05 Range
+      </div>
+
+    </div>
+
+  `;
 
 }
 
@@ -502,7 +514,7 @@ async function startLoad(){
 
   await loadMainMarket();
 
-  updateMood();
+  await getOptionData();
 
   updateMarketStatus();
 
