@@ -3,8 +3,8 @@
 
 <head>
 
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>DR Brokers Market Tracker</title>
 
@@ -27,18 +27,13 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:20px;
   flex-wrap:wrap;
   gap:20px;
-}
-
-.logo-box{
-  display:flex;
-  flex-direction:column;
+  margin-bottom:30px;
 }
 
 .brand{
-  font-size:44px;
+  font-size:42px;
   font-weight:bold;
   color:#6c63ff;
 }
@@ -46,13 +41,6 @@ body{
 .tagline{
   color:#aaa;
   margin-top:5px;
-}
-
-.market-status{
-  background:#11182d;
-  padding:10px 18px;
-  border-radius:12px;
-  font-size:15px;
 }
 
 .refresh-btn{
@@ -66,9 +54,16 @@ body{
   font-weight:bold;
 }
 
+.market-status{
+  background:#11182d;
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:15px;
+}
+
 h2{
-  margin-top:35px;
-  margin-bottom:18px;
+  margin-top:40px;
+  margin-bottom:20px;
 }
 
 .grid{
@@ -115,7 +110,7 @@ h2{
 }
 
 .mood-box{
-  margin-top:30px;
+  margin-top:35px;
   background:#11182d;
   padding:25px;
   border-radius:18px;
@@ -154,7 +149,7 @@ h2{
 
 <div class="topbar">
 
-  <div class="logo-box">
+  <div>
 
     <div class="brand">
       DR Brokers
@@ -176,23 +171,51 @@ h2{
 
 </div>
 
+<!-- WORLD INDICES -->
+
 <h2>🌍 World Market Indices</h2>
 
 <div class="grid" id="marketGrid">
 
   <div class="loader">
-    Loading Live Market Data...
+    Loading Market Data...
   </div>
 
 </div>
 
+<!-- TOP GAINER -->
+
 <h2>🚀 Top Gainer Index</h2>
 
-<div class="grid" id="gainersGrid"></div>
+<div class="grid">
+
+  <div class="card" id="topGainerCard">
+
+    <div class="symbol">
+      Loading...
+    </div>
+
+  </div>
+
+</div>
+
+<!-- TOP LOSER -->
 
 <h2>📉 Top Loser Index</h2>
 
-<div class="grid" id="losersGrid"></div>
+<div class="grid">
+
+  <div class="card" id="topLoserCard">
+
+    <div class="symbol">
+      Loading...
+    </div>
+
+  </div>
+
+</div>
+
+<!-- AI MOOD -->
 
 <div class="mood-box">
 
@@ -265,24 +288,33 @@ async function fetchYahoo(symbol){
       `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`
     );
 
-    const response = await fetch(proxy + target);
+    const response =
+    await fetch(proxy + target);
 
-    const wrappedData = await response.json();
+    const wrappedData =
+    await response.json();
 
-    const data = JSON.parse(wrappedData.contents);
+    const data =
+    JSON.parse(wrappedData.contents);
 
-    const result = data.chart.result[0];
+    const result =
+    data.chart.result[0];
 
-    const meta = result.meta;
+    const meta =
+    result.meta;
 
-    const price = meta.regularMarketPrice;
+    const price =
+    meta.regularMarketPrice;
 
-    const prevClose = meta.previousClose;
+    const prevClose =
+    meta.previousClose;
 
-    const change = (price - prevClose).toFixed(2);
+    const change =
+    (price - prevClose).toFixed(2);
 
     const percent =
-    (((price - prevClose) / prevClose) * 100).toFixed(2);
+    (((price - prevClose) / prevClose) * 100)
+    .toFixed(2);
 
     return {
 
@@ -370,63 +402,53 @@ async function loadMainMarket(){
 
 function loadTopMovers(){
 
-  const gainersGrid =
-  document.getElementById("gainersGrid");
-
-  const losersGrid =
-  document.getElementById("losersGrid");
-
   const sorted =
-  [...marketData].sort((a,b)=>b.change-a.change);
+  [...marketData]
+  .sort((a,b)=>b.change-a.change);
 
-  const topGainer = sorted[0];
+  const topGainer =
+  sorted[0];
 
   const topLoser =
   sorted[sorted.length - 1];
 
-  gainersGrid.innerHTML = `
+  document.getElementById("topGainerCard")
+  .innerHTML = `
 
-    <div class="card">
+    <div class="symbol">
+      ${topGainer.name}
+    </div>
 
-      <div class="symbol">
-        ${topGainer.name}
-      </div>
+    <div class="price">
+      ${topGainer.price}
+    </div>
 
-      <div class="price">
-        ${topGainer.price}
-      </div>
+    <div class="change green">
 
-      <div class="change green">
+      ▲ ${topGainer.change}
 
-        ▲ ${topGainer.change}
-
-        (${topGainer.percent}%)
-
-      </div>
+      (${topGainer.percent}%)
 
     </div>
 
   `;
 
-  losersGrid.innerHTML = `
+  document.getElementById("topLoserCard")
+  .innerHTML = `
 
-    <div class="card">
+    <div class="symbol">
+      ${topLoser.name}
+    </div>
 
-      <div class="symbol">
-        ${topLoser.name}
-      </div>
+    <div class="price">
+      ${topLoser.price}
+    </div>
 
-      <div class="price">
-        ${topLoser.price}
-      </div>
+    <div class="change red">
 
-      <div class="change red">
+      ▼ ${topLoser.change}
 
-        ▼ ${topLoser.change}
-
-        (${topLoser.percent}%)
-
-      </div>
+      (${topLoser.percent}%)
 
     </div>
 
