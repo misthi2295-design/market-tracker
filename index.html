@@ -1,172 +1,209 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Live Market Tracker</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-  <style>
-    *{
-      margin:0;
-      padding:0;
-      box-sizing:border-box;
-      font-family:Arial, sans-serif;
-    }
+<title>Live Market Tracker</title>
 
-    body{
-      background:#050816;
-      color:white;
-      padding:20px;
-    }
+<style>
 
-    h1{
-      margin-bottom:20px;
-      color:#fff;
-    }
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family:Arial,sans-serif;
+}
 
-    .topbar{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      margin-bottom:20px;
-    }
+body{
+  background:#050816;
+  color:white;
+  padding:20px;
+}
 
-    .refresh-btn{
-      padding:10px 18px;
-      background:#6c63ff;
-      border:none;
-      border-radius:10px;
-      color:white;
-      cursor:pointer;
-      font-weight:bold;
-    }
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:30px;
+}
 
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-      gap:20px;
-    }
+h1{
+  font-size:42px;
+}
 
-    .card{
-      background:#10172b;
-      padding:20px;
-      border-radius:16px;
-      box-shadow:0 0 10px rgba(0,0,0,0.4);
-    }
+.refresh-btn{
+  background:#6c63ff;
+  color:white;
+  border:none;
+  padding:12px 20px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:16px;
+  font-weight:bold;
+}
 
-    .symbol{
-      font-size:14px;
-      color:#aaa;
-      margin-bottom:10px;
-    }
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:20px;
+}
 
-    .price{
-      font-size:28px;
-      font-weight:bold;
-      margin-bottom:10px;
-    }
+.card{
+  background:#11182d;
+  padding:22px;
+  border-radius:18px;
+  transition:0.3s;
+  box-shadow:0 0 10px rgba(0,0,0,0.4);
+}
 
-    .change{
-      font-size:16px;
-      font-weight:bold;
-    }
+.card:hover{
+  transform:translateY(-5px);
+}
 
-    .green{
-      color:#00ff9d;
-    }
+.symbol{
+  color:#a0a0a0;
+  margin-bottom:14px;
+  font-size:15px;
+}
 
-    .red{
-      color:#ff4d6d;
-    }
+.price{
+  font-size:32px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
 
-    .footer{
-      margin-top:30px;
-      text-align:center;
-      color:#888;
-      font-size:13px;
-    }
+.change{
+  font-size:18px;
+  font-weight:bold;
+}
 
-    .loader{
-      text-align:center;
-      margin-top:50px;
-      color:#999;
-    }
-  </style>
+.green{
+  color:#00ff9d;
+}
+
+.red{
+  color:#ff4d6d;
+}
+
+.footer{
+  text-align:center;
+  margin-top:40px;
+  color:#888;
+  font-size:14px;
+}
+
+.loader{
+  text-align:center;
+  font-size:20px;
+  color:#aaa;
+  margin-top:80px;
+}
+
+</style>
+
 </head>
 
 <body>
 
-  <div class="topbar">
-    <h1>📈 Live Market Tracker</h1>
-    <button class="refresh-btn" onclick="loadData()">Refresh</button>
+<div class="topbar">
+  <h1>📈 Live Market Tracker</h1>
+
+  <button class="refresh-btn" onclick="loadData()">
+    Refresh
+  </button>
+</div>
+
+<div class="grid" id="marketGrid">
+
+  <div class="loader">
+    Loading Live Market Data...
   </div>
 
-  <div class="grid" id="marketGrid"></div>
+</div>
 
-  <div class="footer">
-    Auto Refresh Every 60 Seconds
-  </div>
+<div class="footer">
+  Auto Refresh Every 60 Seconds
+</div>
 
 <script>
 
 const symbols = [
+
   {
-    name: "S&P 500",
-    symbol: "^GSPC"
+    name:"S&P 500",
+    symbol:"^GSPC"
   },
+
   {
-    name: "NASDAQ",
-    symbol: "^IXIC"
+    name:"NASDAQ",
+    symbol:"^IXIC"
   },
+
   {
-    name: "Dow Jones",
-    symbol: "^DJI"
+    name:"Dow Jones",
+    symbol:"^DJI"
   },
+
   {
-    name: "NIFTY 50",
-    symbol: "^NSEI"
+    name:"NIFTY 50",
+    symbol:"^NSEI"
   },
+
   {
-    name: "BANK NIFTY",
-    symbol: "^NSEBANK"
+    name:"BANK NIFTY",
+    symbol:"^NSEBANK"
   },
+
   {
-    name: "BTC/USD",
-    symbol: "BTC-USD"
+    name:"BTC/USD",
+    symbol:"BTC-USD"
   },
+
   {
-    name: "ETH/USD",
-    symbol: "ETH-USD"
+    name:"ETH/USD",
+    symbol:"ETH-USD"
   }
+
 ];
 
 async function fetchYahoo(symbol){
 
   try{
 
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const url =
+    `https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
 
-    const res = await fetch(url);
+    const response = await fetch(url);
 
-    const data = await res.json();
+    const data = await response.json();
 
     const result = data.chart.result[0];
 
     const meta = result.meta;
 
     const price = meta.regularMarketPrice;
-    const prev = meta.previousClose;
 
-    const change = (price - prev).toFixed(2);
-    const percent = ((change / prev) * 100).toFixed(2);
+    const prevClose = meta.previousClose;
+
+    const change = (price - prevClose).toFixed(2);
+
+    const percent =
+    (((price - prevClose) / prevClose) * 100).toFixed(2);
 
     return {
-      price,
+
+      price:price.toFixed(2),
       change,
       percent
+
     };
 
-  }catch(err){
+  }
+
+  catch(error){
+
+    console.log(error);
 
     return null;
 
@@ -178,7 +215,11 @@ async function loadData(){
 
   const grid = document.getElementById("marketGrid");
 
-  grid.innerHTML = `<div class="loader">Loading Live Market Data...</div>`;
+  grid.innerHTML = `
+    <div class="loader">
+      Loading Live Market Data...
+    </div>
+  `;
 
   let html = "";
 
@@ -188,36 +229,56 @@ async function loadData(){
 
     if(data){
 
-      const positive = data.change >= 0;
+      const positive = Number(data.change) >= 0;
 
       html += `
-        <div class="card">
-          <div class="symbol">${item.name}</div>
 
-          <div class="price">
-            ${data.price}
-          </div>
+      <div class="card">
 
-          <div class="change ${positive ? 'green' : 'red'}">
-            ${positive ? '▲' : '▼'}
-            ${data.change}
-            (${data.percent}%)
-          </div>
+        <div class="symbol">
+          ${item.name}
         </div>
+
+        <div class="price">
+          ${data.price}
+        </div>
+
+        <div class="change ${positive ? "green" : "red"}">
+
+          ${positive ? "▲" : "▼"}
+
+          ${data.change}
+
+          (${data.percent}%)
+
+        </div>
+
+      </div>
+
       `;
 
-    }else{
+    }
+
+    else{
 
       html += `
-        <div class="card">
-          <div class="symbol">${item.name}</div>
 
-          <div class="price">--</div>
+      <div class="card">
 
-          <div class="change red">
-            Data Failed
-          </div>
+        <div class="symbol">
+          ${item.name}
         </div>
+
+        <div class="price">
+          --
+        </div>
+
+        <div class="change red">
+          Data Failed
+        </div>
+
+      </div>
+
       `;
 
     }
@@ -230,7 +291,7 @@ async function loadData(){
 
 loadData();
 
-setInterval(loadData, 60000);
+setInterval(loadData,60000);
 
 </script>
 
