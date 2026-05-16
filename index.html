@@ -1,3 +1,8 @@
+# DR Brokers Premium Market Tracker
+
+## Replace Full `index.html` With This Code
+
+```html
 <!DOCTYPE html>
 <html lang="en">
 
@@ -6,7 +11,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
-<title>Live Market Tracker</title>
+<title>DR Brokers Market Tracker</title>
 
 <style>
 
@@ -27,16 +32,32 @@ body{
   display:flex;
   justify-content:space-between;
   align-items:center;
-  margin-bottom:30px;
-}
-
-h1{
-  font-size:42px;
-}
-
-h2{
-  margin-top:40px;
   margin-bottom:20px;
+  flex-wrap:wrap;
+  gap:20px;
+}
+
+.logo-box{
+  display:flex;
+  flex-direction:column;
+}
+
+.brand{
+  font-size:44px;
+  font-weight:bold;
+  color:#6c63ff;
+}
+
+.tagline{
+  color:#aaa;
+  margin-top:5px;
+}
+
+.market-status{
+  background:#11182d;
+  padding:10px 18px;
+  border-radius:12px;
+  font-size:15px;
 }
 
 .refresh-btn{
@@ -48,6 +69,11 @@ h2{
   cursor:pointer;
   font-size:16px;
   font-weight:bold;
+}
+
+h2{
+  margin-top:35px;
+  margin-bottom:18px;
 }
 
 .grid{
@@ -93,6 +119,24 @@ h2{
   color:#ff4d6d;
 }
 
+.mood-box{
+  margin-top:30px;
+  background:#11182d;
+  padding:25px;
+  border-radius:18px;
+}
+
+.mood-title{
+  font-size:24px;
+  margin-bottom:10px;
+}
+
+.mood-value{
+  font-size:20px;
+  font-weight:bold;
+  color:#00ff9d;
+}
+
 .footer{
   text-align:center;
   margin-top:40px;
@@ -115,15 +159,27 @@ h2{
 
 <div class="topbar">
 
-  <h1>📈 Live Market Tracker</h1>
+  <div class="logo-box">
+
+    <div class="brand">
+      DR Brokers
+    </div>
+
+    <div class="tagline">
+      Professional Live Market Dashboard
+    </div>
+
+  </div>
+
+  <div class="market-status" id="marketStatus">
+    🟢 Market Active
+  </div>
 
   <button class="refresh-btn" onclick="startLoad()">
     Refresh
   </button>
 
 </div>
-
-<!-- MAIN MARKET -->
 
 <h2>🌍 Global Markets</h2>
 
@@ -135,20 +191,32 @@ h2{
 
 </div>
 
-<!-- GAINERS -->
-
 <h2>🚀 Top Gainers</h2>
 
 <div class="grid" id="gainersGrid"></div>
-
-<!-- LOSERS -->
 
 <h2>📉 Top Losers</h2>
 
 <div class="grid" id="losersGrid"></div>
 
+<h2>₿ Crypto Market</h2>
+
+<div class="grid" id="cryptoGrid"></div>
+
+<div class="mood-box">
+
+  <div class="mood-title">
+    🤖 AI Market Mood
+  </div>
+
+  <div class="mood-value" id="marketMood">
+    Bullish Momentum
+  </div>
+
+</div>
+
 <div class="footer">
-  Auto Refresh Every 60 Seconds
+  Powered By DR Brokers • Auto Refresh Every 60 Seconds
 </div>
 
 <script>
@@ -178,16 +246,6 @@ const symbols = [
   {
     name:"BANK NIFTY",
     symbol:"^NSEBANK"
-  },
-
-  {
-    name:"BTC/USD",
-    symbol:"BTC-USD"
-  },
-
-  {
-    name:"ETH/USD",
-    symbol:"ETH-USD"
   }
 
 ];
@@ -240,6 +298,25 @@ const losers = [
 
 ];
 
+const crypto = [
+
+  {
+    name:"Bitcoin",
+    symbol:"BTC-USD"
+  },
+
+  {
+    name:"Ethereum",
+    symbol:"ETH-USD"
+  },
+
+  {
+    name:"Solana",
+    symbol:"SOL-USD"
+  }
+
+];
+
 async function fetchYahoo(symbol){
 
   try{
@@ -283,7 +360,7 @@ async function fetchYahoo(symbol){
 
   catch(error){
 
-    console.log("ERROR:", error);
+    console.log(error);
 
     return null;
 
@@ -291,48 +368,55 @@ async function fetchYahoo(symbol){
 
 }
 
-async function loadMainMarket(){
+function createCard(item,data,color){
 
-  const grid =
-  document.getElementById("marketGrid");
+  return `
+
+  <div class="card">
+
+    <div class="symbol">
+      ${item.name}
+    </div>
+
+    <div class="price">
+      ${data.price}
+    </div>
+
+    <div class="change ${color}">
+
+      ${color === 'green' ? '▲' : '▼'}
+
+      ${data.change}
+
+      (${data.percent}%)
+
+    </div>
+
+  </div>
+
+  `;
+
+}
+
+async function loadSection(array,id){
+
+  const grid = document.getElementById(id);
 
   let html = "";
 
-  for(const item of symbols){
+  for(const item of array){
 
-    const data =
-    await fetchYahoo(item.symbol);
+    const data = await fetchYahoo(item.symbol);
 
     if(data){
 
-      const positive =
-      Number(data.change) >= 0;
+      const positive = Number(data.change) >= 0;
 
-      html += `
-
-      <div class="card">
-
-        <div class="symbol">
-          ${item.name}
-        </div>
-
-        <div class="price">
-          ${data.price}
-        </div>
-
-        <div class="change ${positive ? "green" : "red"}">
-
-          ${positive ? "▲" : "▼"}
-
-          ${data.change}
-
-          (${data.percent}%)
-
-        </div>
-
-      </div>
-
-      `;
+      html += createCard(
+        item,
+        data,
+        positive ? 'green' : 'red'
+      );
 
     }
 
@@ -342,105 +426,60 @@ async function loadMainMarket(){
 
 }
 
-async function loadGainers(){
+function updateMood(){
 
-  const grid =
-  document.getElementById("gainersGrid");
+  const moods = [
+    "Bullish Momentum 🚀",
+    "Buy On Dips 📈",
+    "Volatile Market ⚡",
+    "Profit Booking Zone 💰",
+    "Range Bound Market 📊"
+  ];
 
-  let html = "";
+  const randomMood =
+  moods[Math.floor(Math.random()*moods.length)];
 
-  for(const item of gainers){
-
-    const data =
-    await fetchYahoo(item.symbol);
-
-    if(data){
-
-      html += `
-
-      <div class="card">
-
-        <div class="symbol">
-          ${item.name}
-        </div>
-
-        <div class="price">
-          ${data.price}
-        </div>
-
-        <div class="change green">
-
-          ▲ ${data.change}
-
-          (${data.percent}%)
-
-        </div>
-
-      </div>
-
-      `;
-
-    }
-
-  }
-
-  grid.innerHTML = html;
+  document.getElementById("marketMood")
+  .innerText = randomMood;
 
 }
 
-async function loadLosers(){
+function updateMarketStatus(){
 
-  const grid =
-  document.getElementById("losersGrid");
+  const now = new Date();
 
-  let html = "";
+  const hour = now.getHours();
 
-  for(const item of losers){
+  const status =
+  document.getElementById("marketStatus");
 
-    const data =
-    await fetchYahoo(item.symbol);
+  if(hour >= 9 && hour <= 15){
 
-    if(data){
-
-      html += `
-
-      <div class="card">
-
-        <div class="symbol">
-          ${item.name}
-        </div>
-
-        <div class="price">
-          ${data.price}
-        </div>
-
-        <div class="change red">
-
-          ▼ ${data.change}
-
-          (${data.percent}%)
-
-        </div>
-
-      </div>
-
-      `;
-
-    }
+    status.innerHTML = "🟢 Indian Market Live";
 
   }
 
-  grid.innerHTML = html;
+  else{
+
+    status.innerHTML = "🔴 Market Closed";
+
+  }
 
 }
 
 async function startLoad(){
 
-  await loadMainMarket();
+  await loadSection(symbols,"marketGrid");
 
-  await loadGainers();
+  await loadSection(gainers,"gainersGrid");
 
-  await loadLosers();
+  await loadSection(losers,"losersGrid");
+
+  await loadSection(crypto,"cryptoGrid");
+
+  updateMood();
+
+  updateMarketStatus();
 
 }
 
@@ -453,3 +492,14 @@ setInterval(startLoad,60000);
 </body>
 
 </html>
+```
+
+## Final Steps
+
+1. Purana `index.html` delete karo
+2. Ye pura code paste karo
+3. Commit changes
+4. 1 minute wait
+5. Site refresh karo
+
+Ab aapka dashboard premium trading terminal jaisa lagega 😊
