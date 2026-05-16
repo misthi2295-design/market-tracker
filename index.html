@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
@@ -30,6 +32,11 @@ body{
 
 h1{
   font-size:42px;
+}
+
+h2{
+  margin-top:40px;
+  margin-bottom:20px;
 }
 
 .refresh-btn{
@@ -107,12 +114,18 @@ h1{
 <body>
 
 <div class="topbar">
+
   <h1>📈 Live Market Tracker</h1>
 
-  <button class="refresh-btn" onclick="loadData()">
+  <button class="refresh-btn" onclick="startLoad()">
     Refresh
   </button>
+
 </div>
+
+<!-- MAIN MARKET -->
+
+<h2>🌍 Global Markets</h2>
 
 <div class="grid" id="marketGrid">
 
@@ -121,6 +134,18 @@ h1{
   </div>
 
 </div>
+
+<!-- GAINERS -->
+
+<h2>🚀 Top Gainers</h2>
+
+<div class="grid" id="gainersGrid"></div>
+
+<!-- LOSERS -->
+
+<h2>📉 Top Losers</h2>
+
+<div class="grid" id="losersGrid"></div>
 
 <div class="footer">
   Auto Refresh Every 60 Seconds
@@ -167,16 +192,71 @@ const symbols = [
 
 ];
 
+const gainers = [
+
+  {
+    name:"NVIDIA",
+    symbol:"NVDA"
+  },
+
+  {
+    name:"Tesla",
+    symbol:"TSLA"
+  },
+
+  {
+    name:"Meta",
+    symbol:"META"
+  },
+
+  {
+    name:"Netflix",
+    symbol:"NFLX"
+  }
+
+];
+
+const losers = [
+
+  {
+    name:"Intel",
+    symbol:"INTC"
+  },
+
+  {
+    name:"PayPal",
+    symbol:"PYPL"
+  },
+
+  {
+    name:"Apple",
+    symbol:"AAPL"
+  },
+
+  {
+    name:"Alibaba",
+    symbol:"BABA"
+  }
+
+];
+
 async function fetchYahoo(symbol){
 
   try{
 
-    const url =
-    `https://api.allorigins.win/raw?url=https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const proxy =
+    "https://api.allorigins.win/get?url=";
 
-    const response = await fetch(url);
+    const target =
+    encodeURIComponent(
+      `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`
+    );
 
-    const data = await response.json();
+    const response = await fetch(proxy + target);
+
+    const wrappedData = await response.json();
+
+    const data = JSON.parse(wrappedData.contents);
 
     const result = data.chart.result[0];
 
@@ -193,7 +273,7 @@ async function fetchYahoo(symbol){
 
     return {
 
-      price:price.toFixed(2),
+      price: price.toFixed(2),
       change,
       percent
 
@@ -203,7 +283,7 @@ async function fetchYahoo(symbol){
 
   catch(error){
 
-    console.log(error);
+    console.log("ERROR:", error);
 
     return null;
 
@@ -211,25 +291,22 @@ async function fetchYahoo(symbol){
 
 }
 
-async function loadData(){
+async function loadMainMarket(){
 
-  const grid = document.getElementById("marketGrid");
-
-  grid.innerHTML = `
-    <div class="loader">
-      Loading Live Market Data...
-    </div>
-  `;
+  const grid =
+  document.getElementById("marketGrid");
 
   let html = "";
 
   for(const item of symbols){
 
-    const data = await fetchYahoo(item.symbol);
+    const data =
+    await fetchYahoo(item.symbol);
 
     if(data){
 
-      const positive = Number(data.change) >= 0;
+      const positive =
+      Number(data.change) >= 0;
 
       html += `
 
@@ -259,7 +336,25 @@ async function loadData(){
 
     }
 
-    else{
+  }
+
+  grid.innerHTML = html;
+
+}
+
+async function loadGainers(){
+
+  const grid =
+  document.getElementById("gainersGrid");
+
+  let html = "";
+
+  for(const item of gainers){
+
+    const data =
+    await fetchYahoo(item.symbol);
+
+    if(data){
 
       html += `
 
@@ -270,11 +365,15 @@ async function loadData(){
         </div>
 
         <div class="price">
-          --
+          ${data.price}
         </div>
 
-        <div class="change red">
-          Data Failed
+        <div class="change green">
+
+          ▲ ${data.change}
+
+          (${data.percent}%)
+
         </div>
 
       </div>
@@ -289,11 +388,68 @@ async function loadData(){
 
 }
 
-loadData();
+async function loadLosers(){
 
-setInterval(loadData,60000);
+  const grid =
+  document.getElementById("losersGrid");
+
+  let html = "";
+
+  for(const item of losers){
+
+    const data =
+    await fetchYahoo(item.symbol);
+
+    if(data){
+
+      html += `
+
+      <div class="card">
+
+        <div class="symbol">
+          ${item.name}
+        </div>
+
+        <div class="price">
+          ${data.price}
+        </div>
+
+        <div class="change red">
+
+          ▼ ${data.change}
+
+          (${data.percent}%)
+
+        </div>
+
+      </div>
+
+      `;
+
+    }
+
+  }
+
+  grid.innerHTML = html;
+
+}
+
+async function startLoad(){
+
+  await loadMainMarket();
+
+  await loadGainers();
+
+  await loadLosers();
+
+}
+
+startLoad();
+
+setInterval(startLoad,60000);
 
 </script>
 
 </body>
+
 </html>
